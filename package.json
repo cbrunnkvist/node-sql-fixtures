@@ -4,7 +4,7 @@
   "description": "Populate a SQL database with fixture data",
   "main": "index.js",
   "scripts": {
-    "test": "fig up"
+    "test": "docker-compose up"
   },
   "files": [
     "index.js",
