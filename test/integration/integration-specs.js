@@ -12,7 +12,7 @@ module.exports = function(dbConfig) {
       this.knex = this.fixtureGenerator.knex;
     });
 
-    beforeEach(function(done) {
+    beforeEach(function() {
       // NOTE: these test tables don't actually have foreign key constraints.
       // This is to make clearing the data between tests easier. The tests are
       // still asserting that cross-table dependencies get resolved correctly
@@ -30,41 +30,36 @@ module.exports = function(dbConfig) {
         knex.schema.dropTableIfExists('has_two_foreign_keys'),
         knex.schema.dropTableIfExists('has_no_id_column')
       ];
-
-      bluebird.all(dropPromises).then(function() {
+      var createPromises = [
         knex.schema.createTable('simple_table', function(table) {
           table.increments('id').primary();
           table.string('string_column');
           table.string('auto_populated_column').notNullable().defaultTo('autopopulated');
-        }).then(function() {
-          knex.schema.createTable('has_foreign_key', function(table) {
-            table.increments('id').primary();
-            table.string('string_column');
-            table.integer('simple_table_id');
-          }).then(function() {
-            knex.schema.createTable('has_foreign_key_to_itself', function(table) {
-              table.increments('id').primary();
-              table.string('string_column');
-              table.integer('parent_id');
-            }).then(function() {
-              knex.schema.createTable('has_two_foreign_keys', function(table) {
-                table.increments('id').primary();
-                table.integer('has_foreign_key_to_itself_id');
-                table.integer('simple_table_id');
-                table.string('string_column');
-              }).then(function() {
-                knex.schema.createTable('has_no_id_column', function(table) {
-                  table.integer('foreign_a_id');
-                  table.integer('foreign_b_id');
-                  table.string('auto_populated_column').notNullable().defaultTo('autopopulated');
-                }).then(function() {
-                  done();
-                });
-              });
-            });
-          });
-        });
-      });
+        }),
+        knex.schema.createTable('has_foreign_key', function(table) {
+          table.increments('id').primary();
+          table.string('string_column');
+          table.integer('simple_table_id');
+        }),
+        knex.schema.createTable('has_foreign_key_to_itself', function(table) {
+          table.increments('id').primary();
+          table.string('string_column');
+          table.integer('parent_id');
+        }),
+        knex.schema.createTable('has_two_foreign_keys', function(table) {
+          table.increments('id').primary();
+          table.integer('has_foreign_key_to_itself_id');
+          table.integer('simple_table_id');
+          table.string('string_column');
+        }),
+        knex.schema.createTable('has_no_id_column', function(table) {
+          table.integer('foreign_a_id');
+          table.integer('foreign_b_id');
+          table.string('auto_populated_column').notNullable().defaultTo('autopopulated');
+        })
+      ];
+
+      return bluebird.all(_.flatten([dropPromises,createPromises]))
     });
 
     after(function(done) {
